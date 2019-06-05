@@ -191,6 +191,11 @@ class SeleniumTestDriverProtocolPart(TestDriverProtocolPart):
         self.webdriver.execute_script("window.postMessage(%s, '*')" % json.dumps(obj))
 
 
+def _isAndroidCapabilities(capabilities):
+  return (('goog:chromeOptions' in capabilities) and
+          ('androidPackage' in capabilities['goog:chromeOptions']))
+
+
 class SeleniumProtocol(Protocol):
     implements = [SeleniumBaseProtocolPart,
                   SeleniumTestharnessProtocolPart,
@@ -375,8 +380,11 @@ class SeleniumRefTestExecutor(RefTestExecutor):
             """return [window.outerWidth - window.innerWidth,
                        window.outerHeight - window.innerHeight];"""
         )
-        self.protocol.webdriver.set_window_size(0, 0)
-        self.protocol.webdriver.set_window_position(800 + width_offset, 600 + height_offset)
+        # Workaround: we cannot set window size/position for android.
+        if not _isAndroidCapabilities(self.protocol.capabilities):
+            self.protocol.webdriver.set_window_size(0, 0)
+            self.protocol.webdriver.set_window_position(
+                800 + width_offset, 600 + height_offset)
 
         result = self.implementation.run_test(test)
 
