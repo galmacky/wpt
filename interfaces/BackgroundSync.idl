@@ -5,6 +5,7 @@
 
 partial interface ServiceWorkerRegistration {
   readonly attribute SyncManager sync;
+  readonly attribute PeriodicSyncManager periodicSync;
 };
 
 [Exposed=(Window,Worker)]
@@ -15,6 +16,7 @@ interface SyncManager {
 
 partial interface ServiceWorkerGlobalScope {
   attribute EventHandler onsync;
+  attribute EventHandler onperiodicsync;
 };
 
 [Constructor(DOMString type, SyncEventInit init), Exposed=ServiceWorker]
@@ -26,4 +28,30 @@ interface SyncEvent : ExtendableEvent {
 dictionary SyncEventInit : ExtendableEventInit {
   required DOMString tag;
   boolean lastChance = false;
+};
+
+dictionary BackgroundSyncOptions {
+  unsigned long long minInterval = 0;
+};
+
+dictionary PeriodicSyncEventInit : ExtendableEventInit {
+  required DOMString tag;
+};
+
+[
+  Constructor(DOMString type, PeriodicSyncEventInit init),
+  Exposed=ServiceWorker,
+  RuntimeEnabled=PeriodicBackgroundSync
+] interface PeriodicSyncEvent : ExtendableEvent {
+    readonly attribute DOMString tag;
+};
+
+[
+  Exposed=(Window,Worker),
+  RuntimeEnabled=PeriodicBackgroundSync
+]
+interface PeriodicSyncManager {
+  Promise<void> register(DOMString tag, BackgroundSyncOptions options);
+  Promise<void> unregister(DOMString tag);
+  Promise<sequence<DOMString>> getTags();
 };
