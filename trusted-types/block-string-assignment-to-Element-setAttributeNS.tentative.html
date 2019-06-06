@@ -25,11 +25,64 @@
       assert_element_accepts_trusted_url_set_ns(window, '3', t, 'a', 'b', RESULTS.URL);
     }, "Element.setAttributeNS assigned via policy (successful URL transformation)");
 
+    // Unknown, namespaced attributes should not be TT checked:
     test(t => {
-      assert_throws_no_trusted_type_set_ns('a', 'b', 'A string');
-    }, "`Element.setAttributeNS = string` throws");
+      assert_element_accepts_non_trusted_type_set_ns('a', 'b', 'A string', 'A string');
+    }, "Element.setAttributeNS accepts untrusted string for non-specced accessor");
 
     test(t => {
-      assert_throws_no_trusted_type_set_ns('a', 'b', null);
-    }, "`Element.setAttributeNS = null` throws");
+      assert_element_accepts_non_trusted_type_set_ns('a', 'b', null, 'null');
+    }, "Element.setAttributeNS accepts null for non-specced accessor");
+
+    // Setup trusted values for use in subsequent tests.
+    const url = createURL_policy(window, '4').createURL(INPUTS.URL);
+    const script_url = createScriptURL_policy(window, '5').createScriptURL(INPUTS.ScriptURL);
+    const html = createHTML_policy(window, '6').createHTML(INPUTS.HTML);
+    const script = createScript_policy(window, '7').createScript(INPUTS.Script);
+
+    // SVG elements that use xlink:href (svg_uri_reference) and that expect
+    // TrustedURL.
+    const elems = [ "a", "feImage", "filter", "image", "linearGradient",
+                    "mpath", "pattern", "radialGradient", "textPath",
+                    "use" ];
+    for (const e of elems) {
+      let elem = document.createElementNS("http://www.w3.org/2000/svg", e);
+
+      test(t => {
+        // Assigning a TrustedURL works.
+        elem.setAttributeNS("http://www.w3.org/1999/xlink", "href", url);
+        assert_equals("" + RESULTS.URL,
+                      elem.getAttributeNodeNS("http://www.w3.org/1999/xlink", "href").value);
+      }, "Assigning TrustedURL to <svg:" + e + " xlink:href=...> works");
+
+        // Assigning things that ought to not work.
+      test(t => {
+        const values = [ "abc", null, script_url, html, script ];
+        for (const v of values) {
+          assert_throws(new TypeError(), _ => {
+            elem.setAttributeNS("http://www.w3.org/1999/xlink", "href", v);
+          });
+        }
+      }, "Blocking non-TrustedURL assignment to <svg:" + e + " xlink:href=...> works");
+    }
+
+    // svg:script xlink:href=... expects a TrustedScriptURL.
+    let elem = document.createElementNS("http://www.w3.org/2000/svg", "script");
+    // Assigning a TrustedScriptURL works.
+    test(t => {
+      elem.setAttributeNS("http://www.w3.org/1999/xlink", "href", script_url);
+      assert_equals("" + RESULTS.ScriptURL,
+                    elem.getAttributeNodeNS("http://www.w3.org/1999/xlink", "href").value);
+    }, "Assigning TrustedScriptURL to <svg:script xlink:href=...> works");
+
+    // Assigning things that ought to not work.
+    test(t => {
+      const values = [ "abc", null, url, html, script ];
+      for (const v of values) {
+        assert_throws(new TypeError(), _ => {
+          elem.setAttributeNS("http://www.w3.org/1999/xlink", "href", v);
+        });
+      }
+    }, "Blocking non-TrustedScriptURL assignment to <scg:script xlink:href=...> works");
+
 </script>
