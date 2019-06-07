@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Toast: attribute tests</title>
+
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+
+<main></main>
+
+<script type="module">
+import { showToast } from 'std:toast';
+import { testToastElement, assertToastShown, assertToastNotShown } from './resources/helpers.js';
+
+testToastElement((toast) => {
+    toast.setAttribute('open', '');
+    assertToastShown(toast);
+}, 'setting `open` on a hidden toast shows the toast');
+
+testToastElement((toast) => {
+    toast.setAttribute('open', false);
+    assertToastShown(toast);
+}, 'setting `open` to falsy on a hidden toast shows the toast');
+
+testToastElement((toast) => {
+    toast.show();
+    toast.setAttribute('open', 'asdf');
+    assertToastShown(toast);
+}, 'setting `open` on a shown toast does nothing');
+
+testToastElement((toast) => {
+    toast.show();
+    toast.setAttribute('open', 'asdf');
+    toast.setAttribute('open', 'asdf');
+    assertToastShown(toast);
+}, 'resetting `open` on a shown toast does nothing');
+
+testToastElement((toast) => {
+    toast.show();
+    toast.setAttribute('open', false);
+    assertToastShown(toast);
+}, 'setting `open` to falsy on a shown toast does nothing');
+
+testToastElement((toast) => {
+    toast.setAttribute('open', null);
+    toast.show();
+    assertToastShown(toast);
+}, 'setting `open` to null on a hidden toast then showing it shows the toast');
+
+testToastElement((toast) => {
+    toast.show();
+    toast.removeAttribute('open');
+    assertToastNotShown(toast);
+}, 'removing `open` hides the toast');
+
+testToastElement((toast) => {
+    toast.show();
+    assert_true(toast.hasAttribute('open'));
+}, 'showing the toast adds open attribute');
+
+testToastElement((toast) => {
+    toast.show();
+    toast.hide();
+    assert_false(toast.hasAttribute('open'));
+}, 'hiding the toast removes open attribute');
+
+testToastElement((toast) => {
+    toast.toggleAttribute('open');
+    assertToastShown(toast);
+}, 'toggling `open` on a hidden toast sets the open attribute');
+
+testToastElement((toast) => {
+    toast.toggleAttribute('open');
+    toast.toggleAttribute('open');
+    assertToastNotShown(toast);
+}, 'toggling `open` twice leaves the toast with no open attribute');
+
+</script>

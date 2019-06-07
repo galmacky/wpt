@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="timeout" content="long">
+<title>Toast: showToast tests</title>
+
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+
+<body>
+</body>
+
+<script type="module">
+import { showToast } from 'std:toast';
+import { assertToastNotShown, assertToastShown } from './resources/helpers.js';
+
+// duration
+async_test(t => {
+    const toast = showToast('message');
+
+    t.step_timeout(() => {
+        assertToastShown(toast);
+    }, 1990);
+
+    t.step_timeout(() => {
+        assertToastNotShown(toast);
+        t.done();
+    }, 2010);
+
+    t.add_cleanup(function() {
+        toast.remove();
+    });
+}, 'showToast closes after default duration of 2000ms');
+
+async_test(t => {
+    const toast = showToast('message', {duration: 1000});
+
+    t.step_timeout(() => {
+        assertToastShown(toast);
+    }, 990);
+
+    t.step_timeout(() => {
+        assertToastNotShown(toast);
+        t.done();
+    }, 1010);
+
+    t.add_cleanup(function() {
+        toast.remove();
+    });
+}, 'showToast closes after user specified 1000ms');
+
+</script>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Toast: Event tests</title>
+
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+
+<main></main>
+
+<script type="module">
+import { testToastElement, EventCounter } from './resources/helpers.js';
+
+testToastElement((toast) => {
+    const counter = new EventCounter();
+
+    toast.addEventListener('open', counter.getCallback());
+    toast.show();
+
+    assert_equals(counter.getCount(), 1);
+}, 'calling `show()` on a hidden toast triggers the `open` event');
+
+testToastElement((toast) => {
+    const counter = new EventCounter();
+
+    toast.show();
+    toast.addEventListener('open', counter.getCallback());
+    toast.show();
+
+    assert_equals(counter.getCount(), 0);
+}, 'calling `show()` on a shown toast does not trigger the `open` event');
+
+testToastElement((toast) => {
+    const counter = new EventCounter();
+
+    toast.addEventListener('close', counter.getCallback());
+    toast.hide();
+
+    assert_equals(counter.getCount(), 0);
+}, 'calling `hide()` on a hidden toast does not trigger the `close` event');
+
+testToastElement((toast) => {
+    const counter = new EventCounter();
+
+    toast.show();
+    toast.addEventListener('close', counter.getCallback());
+    toast.hide();
+
+    assert_equals(counter.getCount(), 1);
+}, 'calling `hide()` on a shown toast triggers the `close` event');
+
+testToastElement((toast) => {
+    const counter = new EventCounter();
+
+    toast.addEventListener('open', counter.getCallback());
+    toast.show();
+    toast.show();
+
+    assert_equals(counter.getCount(), 1);
+}, 'calling `show()` twice only triggers the `open` event once');
+
+testToastElement((toast) => {
+    const counter = new EventCounter();
+
+    toast.show();
+    toast.addEventListener('close', counter.getCallback());
+    toast.hide();
+    toast.hide();
+
+    assert_equals(counter.getCount(), 1);
+}, 'calling `hide()` twice only triggers the `close` event once');
+
+// TODO: checking event equality tests are failing, need to figure out
+// proper way to test it or if it's an implementation problem
+
+testToastElement((toast) => {
+    let event1, event2;
+
+    toast.addEventListener('open', (e) => {
+        event1 = e;
+    });
+
+    toast.show();
+    toast.hide();
+
+    toast.addEventListener('open', (e) => {
+        event2 = e;
+    });
+
+    toast.show();
+
+    assert_false(event1 === event2);
+}, "separate openings trigger different `open` events");
+
+testToastElement((toast) => {
+    let event1, event2;
+
+    toast.addEventListener('close', (e) => {
+        event1 = e;
+    });
+
+    toast.show();
+    toast.hide();
+
+    toast.addEventListener('close', (e) => {
+        event2 = e;
+    });
+
+    toast.show();
+    toast.hide();
+
+    assert_false(event1 === event2);
+}, "separate closings trigger different `close` events");
+</script>

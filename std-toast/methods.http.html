@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Toast: method tests</title>
+
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+
+<main></main>
+
+<script type="module">
+import { showToast } from 'std:toast';
+import { testToastElement, assertToastShown, assertToastNotShown } from './resources/helpers.js';
+
+// TODO: fix test timing out issue
+
+testToastElement((toast) => {
+    toast.show();
+
+    assertToastShown(toast);
+}, 'calling `show()` on a hidden toast opens and displays it');
+
+testToastElement((toast) => {
+    toast.toggleAttribute('open');
+    toast.show();
+
+    assertToastShown(toast);
+}, 'calling `show()` on a shown toast keeps it open');
+
+testToastElement((toast) => {
+    toast.toggleAttribute('open');
+    toast.hide();
+
+    assertToastNotShown(toast);
+}, 'calling `hide()` on a shown toast hides the toast');
+
+testToastElement((toast) => {
+    toast.hide();
+
+    assertToastNotShown(toast);
+}, 'calling `hide()` on a hidden toast does nothing');
+
+testToastElement((toast) => {
+    toast.toggle();
+
+    assertToastShown(toast);
+}, 'calling `toggle()` on a hidden toast shows the toast');
+
+testToastElement((toast) => {
+    toast.show();
+    toast.toggle();
+
+    assertToastNotShown(toast);
+}, 'calling `toggle()` on a shown toast hides the toast');
+
+async_test(t => {
+    document.querySelector('main').innerHTML = `<std-toast id="test">Message</std-toast>`;
+    const toast = document.querySelector('#test');
+    toast.show();
+
+    t.step_timeout(() => {
+        assertToastShown(toast);
+    }, 1999);
+
+    t.step_timeout(() => {
+        assertToastNotShown(toast);
+    }, 2001);
+
+    t.add_cleanup(function() {
+        toast.remove();
+    });
+}, 'calling `show()` starts the default timeout');
+
+async_test(t => {
+    document.querySelector('main').innerHTML = `<std-toast id="test">Message</std-toast>`;
+    const toast = document.querySelector('#test');
+    toast.show({duration: 1000});
+
+    t.step_timeout(() => {
+        assertToastShown(toast);
+    }, 990);
+
+    t.step_timeout(() => {
+        assertToastNotShown(toast);
+    }, 1010);
+
+    t.add_cleanup(function() {
+        toast.remove();
+    });
+}, 'calling `show()` with a duration parameter starts the timeout for that length');
+
+async_test(t => {
+    const toast = showToast('message');
+
+    t.step_timeout(() => {
+        assertToastShown(toast);
+        toast.show();
+    }, 1000);
+
+    t.step_timeout(() => {
+        assertToastShown(toast);
+    }, 2010);
+
+    t.step_timeout(() => {
+        assertToastNotShown(toast);
+        t.done();
+    }, 3010);
+
+    t.add_cleanup(function() {
+        toast.remove();
+    });
+}, 'calling `show()` twice resets the timeout');
+
+async_test(t => {
+    const toast = showToast('message');
+
+    t.step_timeout(() => {
+        assertToastShown(toast);
+        toast.hide();
+    }, 1000);
+
+    t.step_timeout(() => {
+        assertToastNotShown(toast);
+    }, 1010);
+
+    t.add_cleanup(function() {
+        toast.remove();
+    });
+}, 'calling `hide()` clears the timeout');
+
+</script>
