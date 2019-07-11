@@ -53,8 +53,6 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
     package_name = "com.android.chrome"  # stable channel
     # Required to start on mobile
     capabilities["goog:chromeOptions"]["androidPackage"] = package_name
-    # Note: from ChromeDriver 75 and onwards only w3c is supported.
-    capabilities["goog:chromeOptions"]["w3c"] = True
 
     for (kwarg, capability) in [("binary", "binary"), ("binary_args", "args")]:
         if kwargs[kwarg] is not None:
@@ -98,8 +96,7 @@ class ChromeAndroidBrowser(Browser):
         self._adb_run(['wait-for-device'])
         self._adb_run(['forward', '--remove-all'])
         self._adb_run(['reverse', '--remove-all'])
-        # "adb reverse" basically forwards network connection from device to
-        # host.
+        # "adb reverse" forwards network connection from device to host.
         for port in _wptserve_ports:
             self._adb_run(['reverse', 'tcp:%d' % port, 'tcp:%d' % port])
 
